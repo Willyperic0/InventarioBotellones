@@ -230,7 +230,7 @@
             fill: white;
         }
 
-        /* --- PLANTILLA DE EXPORTACIÓN --- */
+        /* --- PLANTILLA DE EXPORTACIÓN LIMPIA --- */
         #export-template {
             position: absolute;
             left: -9999px;
@@ -540,6 +540,35 @@
             });
         }
 
+        // Genera la cadena de texto dinámico solo con sabores que tengan existencia
+        function generateShareText() {
+            let lines = [];
+
+            // Orden de exportación limpia: Burj, Safa, Khalifa, Dusit
+            flavors.forEach(f => {
+                const data = inventory[f.id];
+                let fullCount = data.full;
+                const fracInfo = getFractionText(data.rawValue);
+                let fracCode = fracInfo.code;
+
+                if (fracCode === "1") {
+                    fullCount += 1;
+                    fracCode = "0";
+                }
+
+                let parts = [];
+                if (fullCount > 0) parts.push(`${fullCount}`);
+                if (fracCode !== "0") parts.push(fracCode);
+
+                // Si hay algún valor (entero o fracción), se añade al texto
+                if (parts.length > 0) {
+                    lines.push(`${f.name} ${parts.join(" y ")}`);
+                }
+            });
+
+            return lines.join("\n");
+        }
+
         async function generateCleanCanvas() {
             buildCleanExportDOM();
             const exportElement = document.getElementById('export-template');
@@ -556,6 +585,7 @@
 
         async function shareReportImage() {
             const canvas = await generateCleanCanvas();
+            const shareText = generateShareText();
 
             canvas.toBlob(async (blob) => {
                 const file = new File([blob], 'inventario.png', { type: 'image/png' });
@@ -564,7 +594,7 @@
                     try {
                         await navigator.share({
                             files: [file],
-                            title: 'Inventario de Botellones'
+                            text: shareText
                         });
                     } catch (err) {
                         console.log('Envío cancelado.', err);
