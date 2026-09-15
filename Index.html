@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario de Botellones</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 12px;
+            max-width: 600px;
+            margin: 0 auto;
+            padding-bottom: 90px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 16px;
+            padding-top: 6px;
+        }
+
+        header h1 {
+            font-size: 1.25rem;
+            color: var(--primary-dark);
+            margin-bottom: 2px;
+        }
+
+        .grid-flavors {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .flavor-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-top: 4px solid var(--flavor-color, var(--primary));
+        }
+
+        .flavor-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--flavor-color, var(--text));
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 4px;
+        }
+
+        .card-main-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .integer-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .integer-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .counter-btn {
+            background: #e2e8f0;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--text);
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        .counter-btn:active {
+            background: #cbd5e1;
+        }
+
+        .counter-value {
+            font-weight: 700;
+            font-size: 1rem;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .label-small {
+            font-size: 0.65rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .bottle-visual-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+        }
+
+        .svg-bottle-container {
+            position: relative;
+            width: 36px;
+            height: 60px;
+        }
+
+        .svg-bottle-container svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .fraction-text {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--flavor-color, var(--primary-dark));
+            margin-top: 2px;
+            text-align: center;
+        }
+
+        .slider-section {
+            background: #f8fafc;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .slider-header .current-frac {
+            color: var(--flavor-color, var(--primary-dark));
+            font-weight: 800;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--flavor-color, var(--primary));
+            cursor: pointer;
+            height: 20px;
+        }
+
+        .action-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+        }
+
+        .btn-action {
+            border: none;
+            flex: 1;
+            max-width: 210px;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .whatsapp-btn {
+            background-color: #25d366;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+        }
+
+        .download-btn {
+            background-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+        }
+
+        .btn-action svg {
+            width: 18px;
+            height: 18px;
+            fill: white;
+        }
+
+        /* --- PLANTILLA DE EXPORTACIÓN --- */
+        #export-template {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            width: 480px;
+            background: #ffffff;
+            padding: 16px;
+            border-radius: 16px;
+        }
+
+        .export-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .export-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 160px;
+            border-top: 4px solid var(--flavor-color);
+        }
+
+        .export-title {
+            font-weight: 800;
+            font-size: 1.05rem;
+            color: var(--flavor-color);
+            margin-bottom: 6px;
+        }
+
+        .export-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            width: 100%;
+            flex-grow: 1;
+        }
+
+        .export-center {
+            justify-content: center !important;
+        }
+
+        .export-item-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            width: 65px;
+        }
+
+        .export-item-column .export-svg-box {
+            width: 40px;
+            height: 65px;
+            margin: 4px 0;
+        }
+
+        .export-item-column .export-val-text {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--flavor-color);
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .no-stock-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+        }
+
+        .no-stock-badge {
+            background: #fee2e2;
+            color: #ef4444;
+            font-weight: 800;
+            font-size: 0.85rem;
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid #fca5a5;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Inventario de Botellones</h1>
+    </header>
+
+    <div class="grid-flavors" id="flavors-container"></div>
+
+    <div class="action-container">
+        <button class="btn-action download-btn" onclick="downloadReportImage()">
+            <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            Guardar Imagen
+        </button>
+        <button class="btn-action whatsapp-btn" onclick="shareReportImage()">
+            <svg viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+            Enviar Imagen
+        </button>
+    </div>
+
+    <!-- Plantilla de Exportación -->
+    <div id="export-template">
+        <div class="export-grid" id="export-grid-content"></div>
+    </div>
+
+    <script>
+        const flavors = [
+            { id: 'burj', name: 'Burj', color: '#ef4444' },      // Rojo
+            { id: 'safa', name: 'Safa', color: '#d97706' },      // Amarillo
+            { id: 'khalifa', name: 'Khalifa', color: '#15803d' },// Verde
+            { id: 'dusit', name: 'Dusit', color: '#7e22ce' }     // Uva
+        ];
+
+        let inventory = {
+            burj: { full: 0, rawValue: 0 },
+            khalifa: { full: 0, rawValue: 0 },
+            safa: { full: 0, rawValue: 0 },
+            dusit: { full: 0, rawValue: 0 }
+        };
+
+        function getFractionText(val) {
+            if (val <= 0.05) return { text: "Vacío", code: "0" };
+            if (val >= 0.92) return { text: "Lleno", code: "1" };
+
+            if (val < 0.29) return { text: "1/4", code: "1/4" };
+            if (val < 0.42) return { text: "1/3", code: "1/3" };
+            if (val < 0.58) return { text: "1/2", code: "1/2" };
+            if (val < 0.71) return { text: "2/3", code: "2/3" };
+            return { text: "3/4", code: "3/4" };
+        }
+
+        function getBottleSVG(idPrefix, fillPercent, color) {
+            const minY = 18;
+            const maxY = 152;
+            const totalHeight = maxY - minY;
+
+            const currentHeight = totalHeight * fillPercent;
+            const currentY = maxY - currentHeight;
+
+            return `
+            <svg viewBox="0 0 100 160" width="100%" height="100%">
+                <defs>
+                    <clipPath id="bottle-clip-${idPrefix}">
+                        <path d="M 38 18 L 62 18 L 62 26 L 68 34 Q 85 45 85 65 L 85 140 Q 85 152 72 152 L 28 152 Q 15 152 15 140 L 15 65 Q 15 45 32 34 L 38 26 Z" />
+                    </clipPath>
+                    <linearGradient id="waterGrad-${idPrefix}" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="${color}" stop-opacity="0.75" />
+                        <stop offset="100%" stop-color="${color}" stop-opacity="1" />
+                    </linearGradient>
+                </defs>
+                <path d="M 38 18 L 62 18 L 62 26 L 68 34 Q 85 45 85 65 L 85 140 Q 85 152 72 152 L 28 152 Q 15 152 15 140 L 15 65 Q 15 45 32 34 L 38 26 Z" fill="#e2e8f0" />
+                <g clip-path="url(#bottle-clip-${idPrefix})">
+                    <rect id="water-rect-${idPrefix}" x="0" y="${currentY}" width="100" height="${currentHeight}" fill="url(#waterGrad-${idPrefix})" />
+                </g>
+                <line x1="22" y1="75" x2="78" y2="75" stroke="#cbd5e1" stroke-width="2" opacity="0.7"/>
+                <line x1="22" y1="95" x2="78" y2="95" stroke="#cbd5e1" stroke-width="2" opacity="0.7"/>
+                <line x1="22" y1="115" x2="78" y2="115" stroke="#cbd5e1" stroke-width="2" opacity="0.7"/>
+                <path d="M 38 18 L 62 18 L 62 26 L 68 34 Q 85 45 85 65 L 85 140 Q 85 152 72 152 L 28 152 Q 15 152 15 140 L 15 65 Q 15 45 32 34 L 38 26 Z" fill="none" stroke="#64748b" stroke-width="4" stroke-linejoin="round" />
+                <rect x="35" y="8" width="30" height="10" rx="2" fill="${color}" stroke="#475569" stroke-width="1.5" />
+            </svg>
+            `;
+        }
+
+        function initUI() {
+            const container = document.getElementById('flavors-container');
+            container.innerHTML = '';
+
+            flavors.forEach(f => {
+                const cardHTML = `
+                    <div class="flavor-card" id="card-${f.id}" style="--flavor-color: ${f.color};">
+                        <span class="flavor-title">${f.name}</span>
+                        
+                        <div class="card-main-content">
+                            <div class="integer-section">
+                                <span class="label-small">Llenos</span>
+                                <div class="integer-controls">
+                                    <button type="button" class="counter-btn" onclick="updateFull('${f.id}', -1)">-</button>
+                                    <span class="counter-value" id="count-${f.id}">0</span>
+                                    <button type="button" class="counter-btn" onclick="updateFull('${f.id}', 1)">+</button>
+                                </div>
+                            </div>
+
+                            <div class="bottle-visual-wrapper">
+                                <div class="svg-bottle-container">
+                                    ${getBottleSVG(`ui-${f.id}`, 0, f.color)}
+                                </div>
+                                <span class="fraction-text" id="frac-text-${f.id}">Vacío</span>
+                            </div>
+                        </div>
+
+                        <div class="slider-section">
+                            <div class="slider-header">
+                                <span>Abierto</span>
+                                <span class="current-frac" id="frac-header-${f.id}">Vacío</span>
+                            </div>
+                            <input type="range" min="0" max="1" step="0.005" value="0" 
+                                oninput="updateFractionContinuous('${f.id}', this.value)">
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHTML;
+            });
+        }
+
+        function updateFull(flavorId, change) {
+            inventory[flavorId].full = Math.max(0, inventory[flavorId].full + change);
+            document.getElementById(`count-${flavorId}`).innerText = inventory[flavorId].full;
+        }
+
+        function updateFractionContinuous(flavorId, val) {
+            const numVal = parseFloat(val);
+            inventory[flavorId].rawValue = numVal;
+
+            const minY = 18; 
+            const maxY = 152;
+            const totalHeight = maxY - minY;
+
+            const currentHeight = totalHeight * numVal;
+            const currentY = maxY - currentHeight;
+
+            const waterRect = document.getElementById(`water-rect-ui-${flavorId}`);
+            if (waterRect) {
+                waterRect.setAttribute('y', currentY);
+                waterRect.setAttribute('height', currentHeight);
+            }
+
+            const fracInfo = getFractionText(numVal);
+            document.getElementById(`frac-header-${flavorId}`).innerText = fracInfo.text;
+            document.getElementById(`frac-text-${flavorId}`).innerText = fracInfo.text;
+        }
+
+        function buildCleanExportDOM() {
+            const exportGrid = document.getElementById('export-grid-content');
+            exportGrid.innerHTML = '';
+
+            flavors.forEach(f => {
+                const data = inventory[f.id];
+                let fullCount = data.full;
+                const fracInfo = getFractionText(data.rawValue);
+                let hasOpenBottle = fracInfo.code !== "0" && fracInfo.code !== "1";
+
+                if (fracInfo.code === "1") {
+                    fullCount += 1;
+                }
+
+                let innerHTML = '';
+
+                if (fullCount === 0 && !hasOpenBottle) {
+                    innerHTML = `
+                        <span class="export-title">${f.name}</span>
+                        <div class="no-stock-container">
+                            <div class="no-stock-badge">SIN EXISTENCIA</div>
+                        </div>
+                    `;
+                } 
+                else if (fullCount > 0 && !hasOpenBottle) {
+                    innerHTML = `
+                        <span class="export-title">${f.name}</span>
+                        <div class="export-row export-center">
+                            <div class="export-item-column">
+                                <span class="label-small">LLENOS</span>
+                                <div class="export-svg-box">
+                                    ${getBottleSVG(`exp-full-${f.id}`, 1.0, f.color)}
+                                </div>
+                                <span class="export-val-text">${fullCount}</span>
+                            </div>
+                        </div>
+                    `;
+                } 
+                else {
+                    let fullSectionHTML = fullCount > 0 ? `
+                        <div class="export-item-column">
+                            <span class="label-small">LLENOS</span>
+                            <div class="export-svg-box">
+                                ${getBottleSVG(`exp-full-${f.id}`, 1.0, f.color)}
+                            </div>
+                            <span class="export-val-text">${fullCount}</span>
+                        </div>
+                    ` : '';
+
+                    innerHTML = `
+                        <span class="export-title">${f.name}</span>
+                        <div class="export-row ${fullCount === 0 ? 'export-center' : ''}">
+                            ${fullSectionHTML}
+                            <div class="export-item-column">
+                                <span class="label-small">ABIERTO</span>
+                                <div class="export-svg-box">
+                                    ${getBottleSVG(`exp-open-${f.id}`, data.rawValue, f.color)}
+                                </div>
+                                <span class="export-val-text">${fracInfo.text}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                exportGrid.innerHTML += `<div class="export-card" style="--flavor-color: ${f.color};">${innerHTML}</div>`;
+            });
+        }
+
+        async function generateCleanCanvas() {
+            buildCleanExportDOM();
+            const exportElement = document.getElementById('export-template');
+            return await html2canvas(exportElement, { scale: 2, backgroundColor: '#ffffff' });
+        }
+
+        async function downloadReportImage() {
+            const canvas = await generateCleanCanvas();
+            const link = document.createElement('a');
+            link.download = `Inventario_${new Date().toISOString().slice(0,10)}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        async function shareReportImage() {
+            const canvas = await generateCleanCanvas();
+
+            canvas.toBlob(async (blob) => {
+                const file = new File([blob], 'inventario.png', { type: 'image/png' });
+
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'Inventario de Botellones'
+                        });
+                    } catch (err) {
+                        console.log('Envío cancelado.', err);
+                    }
+                } else {
+                    alert('Navegador sin soporte de envío directo. Se descargará la imagen limpia.');
+                    downloadReportImage();
+                }
+            }, 'image/png');
+        }
+
+        initUI();
+    </script>
+</body>
+</html>
